@@ -9,6 +9,8 @@
 
 #include <assert.h>
 
+#pragma GCC optimize 1
+
 // Instance
 
 ICARUS_Instance::ICARUS_Instance( void )
@@ -567,7 +569,11 @@ int ICARUS_Instance::Load( void )
 	m_interface->I_ReadSaveData( 'ICAR', &version, sizeof( version ), NULL );
 
 	//Versions must match!
+#ifdef PANDORA
+	if ( (float)version != (float)ICARUS_VERSION )
+#else
 	if ( version != ICARUS_VERSION )
+#endif
 	{
 		m_interface->I_DPrintf( WL_ERROR, "save game data contains outdated ICARUS version information!\n");
 		return false;

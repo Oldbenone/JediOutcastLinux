@@ -3,7 +3,7 @@
 #ifndef __INTERPRETER__
 #define __INTERPRETER__
 
-#define ICARUS_VERSION	1.33
+#define ICARUS_VERSION	1.33d
 
 #define MAX_STRING_SIZE	256
 #define	MAX_VAR_NAME	64
