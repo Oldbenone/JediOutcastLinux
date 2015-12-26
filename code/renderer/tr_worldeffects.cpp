@@ -2194,9 +2194,9 @@ void CRainSystem::Render(void)
 
 	item = mRainList;
 	#ifdef HAVE_GLES
-	GLfloat vtx[3*mMaxRain];
-	GLfloat col[4*mMaxRain];
-	GLfloat tex[2*mMaxRain];
+	GLfloat vtx[3*mMaxRain*3];
+	GLfloat col[4*mMaxRain*3];
+	GLfloat tex[2*mMaxRain*3];
 	int idx=0;
 	#else
 	qglBegin(GL_TRIANGLES );
