@@ -13,7 +13,7 @@
 #include "../cgame/cg_local.h"
 #include "../game/npc_headers.h"
 
-static	vec3_t	forward, vright, up;
+static	vec3_t	vforward, vright, up;
 static	vec3_t	muzzle;
 
 void drop_charge(gentity_t *ent, vec3_t start, vec3_t dir);
@@ -312,7 +312,7 @@ void WP_Explode( gentity_t *self )
 //-----------------------------------------------------------------------------
 {
 	gentity_t	*attacker = self;
-	vec3_t		forward;
+	vec3_t		vforward;
 
 	// stop chain reaction runaway loops
 	self->takedamage = qfalse;
@@ -320,11 +320,11 @@ void WP_Explode( gentity_t *self )
 	self->s.loopSound = 0;
 
 //	VectorCopy( self->currentOrigin, self->s.pos.trBase );
-	AngleVectors( self->s.angles, forward, NULL, NULL );
+	AngleVectors( self->s.angles, vforward, NULL, NULL );
 
 	if ( self->fxID > 0 )
 	{
-		G_PlayEffect( self->fxID, self->currentOrigin, forward );
+		G_PlayEffect( self->fxID, self->currentOrigin, vforward );
 	}
 	
 	if ( self->owner )
@@ -699,7 +699,7 @@ static void WP_FireBryarPistol( gentity_t *ent, qboolean alt_fire )
 	{
 		vec3_t	angs;
 
-		vectoangles( forward, angs );
+		vectoangles( vforward, angs );
 
 		if ( ent->client->NPC_class == CLASS_IMPWORKER )
 		{//*sigh*, hack to make impworkers less accurate without affecteing imperial officer accuracy
@@ -712,12 +712,12 @@ static void WP_FireBryarPistol( gentity_t *ent, qboolean alt_fire )
 			angs[YAW]	+= ( crandom() * ((5-ent->NPC->currentAim)*0.25f) );
 		}
 
-		AngleVectors( angs, forward, NULL, NULL );
+		AngleVectors( angs, vforward, NULL, NULL );
 	}
 
-	WP_MissileTargetHint(ent, start, forward);
+	WP_MissileTargetHint(ent, start, vforward);
 
-	gentity_t	*missile = CreateMissile( start, forward, BRYAR_PISTOL_VEL, 10000, ent, alt_fire );
+	gentity_t	*missile = CreateMissile( start, vforward, BRYAR_PISTOL_VEL, 10000, ent, alt_fire );
 
 	missile->classname = "bryar_proj";
 	missile->s.weapon = WP_BRYAR_PISTOL;
@@ -847,7 +847,7 @@ static void WP_FireBlaster( gentity_t *ent, qboolean alt_fire )
 {
 	vec3_t	dir, angs;
 
-	vectoangles( forward, angs );
+	vectoangles( vforward, angs );
 
 	if ( alt_fire )
 	{
@@ -943,8 +943,8 @@ static void WP_DisruptorMainFire( gentity_t *ent )
 //		damage *= 2;
 //	}
 
-	WP_MissileTargetHint(ent, start, forward);
-	VectorMA( start, shotRange, forward, end );
+	WP_MissileTargetHint(ent, start, vforward);
+	VectorMA( start, shotRange, vforward, end );
 
 	int ignore = ent->s.number;
 	int traces = 0;
@@ -992,11 +992,11 @@ static void WP_DisruptorMainFire( gentity_t *ent )
 			int hitLoc = G_GetHitLocFromTrace( &tr, MOD_DISRUPTOR );
 			if ( traceEnt && traceEnt->client && traceEnt->client->NPC_class == CLASS_GALAKMECH )
 			{//hehe
-				G_Damage( traceEnt, ent, ent, forward, tr.endpos, 3, DAMAGE_DEATH_KNOCKBACK, MOD_DISRUPTOR, hitLoc );
+				G_Damage( traceEnt, ent, ent, vforward, tr.endpos, 3, DAMAGE_DEATH_KNOCKBACK, MOD_DISRUPTOR, hitLoc );
 			}
 			else
 			{
-				G_Damage( traceEnt, ent, ent, forward, tr.endpos, damage, DAMAGE_DEATH_KNOCKBACK, MOD_DISRUPTOR, hitLoc );
+				G_Damage( traceEnt, ent, ent, vforward, tr.endpos, damage, DAMAGE_DEATH_KNOCKBACK, MOD_DISRUPTOR, hitLoc );
 			}
 		}
 		else 
@@ -1010,10 +1010,10 @@ static void WP_DisruptorMainFire( gentity_t *ent )
 	for ( dist = 0; dist < shotDist; dist += 64 )
 	{
 		//FIXME: on a really long shot, this could make a LOT of alerts in one frame...
-		VectorMA( start, dist, forward, spot );
+		VectorMA( start, dist, vforward, spot );
 		AddSightEvent( ent, spot, 256, AEL_DISCOVERED, 50 );
 	}
-	VectorMA( start, shotDist-4, forward, spot );
+	VectorMA( start, shotDist-4, vforward, spot );
 	AddSightEvent( ent, spot, 256, AEL_DISCOVERED, 50 );
 }
 
@@ -1055,7 +1055,7 @@ void WP_DisruptorAltFire( gentity_t *ent )
 	else
 	{
 		VectorCopy( ent->client->renderInfo.eyePoint, start );
-		AngleVectors( ent->client->renderInfo.eyeAngles, forward, NULL, NULL );
+		AngleVectors( ent->client->renderInfo.eyeAngles, vforward, NULL, NULL );
 
 		// don't let NPC's do charging
 		int count = ( level.time - ent->client->ps.weaponChargeTime - 50 ) / DISRUPTOR_CHARGE_UNIT;
@@ -1094,7 +1094,7 @@ void WP_DisruptorAltFire( gentity_t *ent )
 
 	for ( int i = 0; i < traces; i++ )
 	{
-		VectorMA( start, shotRange, forward, end );
+		VectorMA( start, shotRange, vforward, end );
 
 		//NOTE: if you want to be able to hit guys in emplaced guns, use "G2_COLLIDE, 10" instead of "G2_RETURNONHIT, 0"
 		//alternately, if you end up hitting an emplaced_gun that has a sitter, just redo this one trace with the "G2_COLLIDE, 10" to see if we it the sitter
@@ -1156,10 +1156,10 @@ void WP_DisruptorAltFire( gentity_t *ent )
 					int hitLoc = G_GetHitLocFromTrace( &tr, MOD_DISRUPTOR );
 					if ( traceEnt && traceEnt->client && traceEnt->client->NPC_class == CLASS_GALAKMECH )
 					{//hehe
-						G_Damage( traceEnt, ent, ent, forward, tr.endpos, 10, DAMAGE_NO_KNOCKBACK|DAMAGE_NO_HIT_LOC, fullCharge ? MOD_SNIPER : MOD_DISRUPTOR, hitLoc );			
+						G_Damage( traceEnt, ent, ent, vforward, tr.endpos, 10, DAMAGE_NO_KNOCKBACK|DAMAGE_NO_HIT_LOC, fullCharge ? MOD_SNIPER : MOD_DISRUPTOR, hitLoc );			
 						break;
 					}
-					G_Damage( traceEnt, ent, ent, forward, tr.endpos, damage, DAMAGE_NO_KNOCKBACK|DAMAGE_NO_HIT_LOC, fullCharge ? MOD_SNIPER : MOD_DISRUPTOR, hitLoc );
+					G_Damage( traceEnt, ent, ent, vforward, tr.endpos, damage, DAMAGE_NO_KNOCKBACK|DAMAGE_NO_HIT_LOC, fullCharge ? MOD_SNIPER : MOD_DISRUPTOR, hitLoc );
 				}
 				else 
 				{
@@ -1195,7 +1195,7 @@ void WP_DisruptorAltFire( gentity_t *ent )
 		AddSightEvent( ent, spot, 256, AEL_DISCOVERED, 50 );
 	}
 	//FIXME: spawn a temp ent that continuously spawns sight alerts here?  And 1 sound alert to draw their attention?
-	VectorMA( start, shotDist-4, forward, spot );
+	VectorMA( start, shotDist-4, vforward, spot );
 	AddSightEvent( ent, spot, 256, AEL_DISCOVERED, 50 );
 }
 
@@ -1212,7 +1212,7 @@ static void WP_FireDisruptor( gentity_t *ent, qboolean alt_fire )
 		WP_DisruptorMainFire( ent );
 	}
 
-	G_PlayEffect( G_EffectIndex( "disruptor/line_cap" ), muzzle, forward );
+	G_PlayEffect( G_EffectIndex( "disruptor/line_cap" ), muzzle, vforward );
 }
 
 
@@ -1272,13 +1272,13 @@ static void WP_BowcasterMainFire( gentity_t *ent )
 //		damage *= 2;
 //	}
 
-	WP_MissileTargetHint(ent, start, forward);
+	WP_MissileTargetHint(ent, start, vforward);
 	for ( int i = 0; i < count; i++ )
 	{
 		// create a range of different velocities
 		vel = BOWCASTER_VELOCITY * ( crandom() * BOWCASTER_VEL_RANGE + 1.0f );
 
-		vectoangles( forward, angs );
+		vectoangles( vforward, angs );
 
 		// add some slop to the fire direction
 		angs[PITCH] += crandom() * BOWCASTER_ALT_SPREAD * 0.2f;
@@ -1327,9 +1327,9 @@ static void WP_BowcasterAltFire( gentity_t *ent )
 	VectorCopy( muzzle, start );
 	WP_TraceSetStart( ent, start, vec3_origin, vec3_origin );//make sure our start point isn't on the other side of a wall
 
-	WP_MissileTargetHint(ent, start, forward);
+	WP_MissileTargetHint(ent, start, vforward);
 
-	gentity_t *missile = CreateMissile( start, forward, BOWCASTER_VELOCITY, 10000, ent, qtrue );
+	gentity_t *missile = CreateMissile( start, vforward, BOWCASTER_VELOCITY, 10000, ent, qtrue );
 
 	missile->classname = "bowcaster_alt_proj";
 	missile->s.weapon = WP_BOWCASTER;
@@ -1458,8 +1458,8 @@ static void WP_RepeaterAltFire( gentity_t *ent )
 	}
 	else
 	{
-		WP_MissileTargetHint(ent, start, forward);
-		missile = CreateMissile( start, forward, REPEATER_ALT_VELOCITY, 10000, ent, qtrue );
+		WP_MissileTargetHint(ent, start, vforward);
+		missile = CreateMissile( start, vforward, REPEATER_ALT_VELOCITY, 10000, ent, qtrue );
 	}
 
 	missile->classname = "repeater_alt_proj";
@@ -1513,7 +1513,7 @@ static void WP_FireRepeater( gentity_t *ent, qboolean alt_fire )
 {
 	vec3_t	dir, angs;
 
-	vectoangles( forward, angs );
+	vectoangles( vforward, angs );
 
 	if ( alt_fire )
 	{
@@ -1559,9 +1559,9 @@ static void WP_DEMP2_MainFire( gentity_t *ent )
 	VectorCopy( muzzle, start );
 	WP_TraceSetStart( ent, start, vec3_origin, vec3_origin );//make sure our start point isn't on the other side of a wall
 
-	WP_MissileTargetHint(ent, start, forward);
+	WP_MissileTargetHint(ent, start, vforward);
 
-	gentity_t *missile = CreateMissile( start, forward, DEMP2_VELOCITY, 10000, ent );
+	gentity_t *missile = CreateMissile( start, vforward, DEMP2_VELOCITY, 10000, ent );
 
 	missile->classname = "demp2_proj";
 	missile->s.weapon = WP_DEMP2;
@@ -1738,8 +1738,8 @@ static void WP_DEMP2_AltFire( gentity_t *ent )
 
 	// the shot can travel a whopping 4096 units in 1 second. Note that the shot will auto-detonate at 4096 units...we'll see if this looks cool or not
 
-	WP_MissileTargetHint(ent, start, forward);
-	gentity_t *missile = CreateMissile( start, forward, DEMP2_ALT_RANGE, 1000, ent, qtrue );
+	WP_MissileTargetHint(ent, start, vforward);
+	gentity_t *missile = CreateMissile( start, vforward, DEMP2_ALT_RANGE, 1000, ent, qtrue );
 
 	// letting it know what the charge size is.
 	missile->count = count;
@@ -1808,7 +1808,7 @@ static void WP_FlechetteMainFire( gentity_t *ent )
 
 	for ( int i = 0; i < FLECHETTE_SHOTS; i++ )
 	{
-		vectoangles( forward, angs );
+		vectoangles( vforward, angs );
 
 		if ( i == 0 && ent->s.number == 0 )
 		{
@@ -1928,7 +1928,7 @@ void prox_mine_stick( gentity_t *self, gentity_t *other, trace_t *trace )
 static void WP_FlechetteProxMine( gentity_t *ent )
 //---------------------------------------------------------
 {
-	gentity_t	*missile = CreateMissile( muzzle, forward, FLECHETTE_MINE_VEL, 10000, ent, qtrue );
+	gentity_t	*missile = CreateMissile( muzzle, vforward, FLECHETTE_MINE_VEL, 10000, ent, qtrue );
 
 	missile->fxID = G_EffectIndex( "flechette/explosion" );
 
@@ -2007,7 +2007,7 @@ static void WP_FlechetteAltFire( gentity_t *self )
 {
 	vec3_t 	dir, fwd, start, angs;
 
-	vectoangles( forward, angs );
+	vectoangles( vforward, angs );
 	VectorCopy( muzzle, start );
 
 	WP_TraceSetStart( self, start, vec3_origin, vec3_origin );//make sure our start point isn't on the other side of a wall
@@ -2164,7 +2164,7 @@ static void WP_FireRocket( gentity_t *ent, qboolean alt_fire )
 	VectorCopy( muzzle, start );
 	WP_TraceSetStart( ent, start, vec3_origin, vec3_origin );//make sure our start point isn't on the other side of a wall
 
-	gentity_t *missile = CreateMissile( start, forward, vel, 10000, ent, alt_fire );
+	gentity_t *missile = CreateMissile( start, vforward, vel, 10000, ent, alt_fire );
 
 	missile->classname = "rocket_proj";
 	missile->s.weapon = WP_ROCKET_LAUNCHER;
@@ -2237,7 +2237,7 @@ static void WP_FireRocket( gentity_t *ent, qboolean alt_fire )
 			}
 		}
 
-		VectorCopy( forward, missile->movedir );
+		VectorCopy( vforward, missile->movedir );
 
 		missile->e_ThinkFunc = thinkF_rocketThink;
 		missile->random = 1.0f;
@@ -2307,15 +2307,15 @@ static void WP_DropDetPack( gentity_t *self, vec3_t start, vec3_t dir )
 //---------------------------------------------------------
 {
 	// Chucking a new one
-	AngleVectors( self->client->ps.viewangles, forward, vright, up );
-	CalcMuzzlePoint( self, forward, vright, up, muzzle, 0 );
-	VectorNormalize( forward );
-	VectorMA( muzzle, -4, forward, muzzle );
+	AngleVectors( self->client->ps.viewangles, vforward, vright, up );
+	CalcMuzzlePoint( self, vforward, vright, up, muzzle, 0 );
+	VectorNormalize( vforward );
+	VectorMA( muzzle, -4, vforward, muzzle );
 
 	VectorCopy( muzzle, start );
 	WP_TraceSetStart( self, start, vec3_origin, vec3_origin );//make sure our start point isn't on the other side of a wall
 
-	gentity_t	*missile = CreateMissile( start, forward, 300, 10000, self, qfalse );
+	gentity_t	*missile = CreateMissile( start, vforward, 300, 10000, self, qfalse );
 
 	missile->fxID = G_EffectIndex( "detpack/explosion" ); // if we set an explosion effect, explode death can use that instead
 
@@ -2383,7 +2383,7 @@ static void WP_FireDetPack( gentity_t *ent, qboolean alt_fire )
 	}
 	else
 	{
-		WP_DropDetPack( ent, muzzle, forward );
+		WP_DropDetPack( ent, muzzle, vforward );
 
 		ent->client->ps.eFlags |= EF_PLANTED_CHARGE;
 	}
@@ -2666,7 +2666,7 @@ void WP_PlaceLaserTrap( gentity_t *ent, qboolean alt_fire )
 
 		laserTrap->s.eFlags |= EF_MISSILE_STICK;
 		laserTrap->s.pos.trType = TR_GRAVITY;
-		VectorScale( forward, LT_VELOCITY, laserTrap->s.pos.trDelta );
+		VectorScale( vforward, LT_VELOCITY, laserTrap->s.pos.trDelta );
 
 		if ( alt_fire )
 		{
@@ -2928,7 +2928,7 @@ gentity_t *WP_FireThermalDetonator( gentity_t *ent, qboolean alt_fire )
 	vec3_t		dir, start;
 	float		damageScale = 1.0f;
 
-	VectorCopy( forward, dir );
+	VectorCopy( vforward, dir );
 	VectorCopy( muzzle, start );
 
 	bolt = G_Spawn();
@@ -3063,7 +3063,7 @@ gentity_t *WP_FireThermalDetonator( gentity_t *ent, qboolean alt_fire )
 gentity_t *WP_DropThermal( gentity_t *ent )
 //---------------------------------------------------------
 {
-	AngleVectors( ent->client->ps.viewangles, forward, vright, up );
+	AngleVectors( ent->client->ps.viewangles, vforward, vright, up );
 	CalcEntitySpot( ent, SPOT_WEAPON, muzzle );
 	return (WP_FireThermalDetonator( ent, qfalse ));
 }
@@ -3074,7 +3074,7 @@ gentity_t *WP_DropThermal( gentity_t *ent )
 void WP_BotLaser( gentity_t *ent )
 //---------------------------------------------------------
 {
-	gentity_t	*missile = CreateMissile( muzzle, forward, BRYAR_PISTOL_VEL, 10000, ent );
+	gentity_t	*missile = CreateMissile( muzzle, vforward, BRYAR_PISTOL_VEL, 10000, ent );
 
 	missile->classname = "bryar_proj";
 	missile->s.weapon = WP_BRYAR_PISTOL;
@@ -3094,9 +3094,9 @@ void WP_EmplacedFire( gentity_t *ent )
 	float damage = EMPLACED_DAMAGE * ( ent->NPC ? 0.1f : 1.0f );
 	float vel = EMPLACED_VEL * ( ent->NPC ? 0.4f : 1.0f );
 
-	WP_MissileTargetHint(ent, muzzle, forward);
+	WP_MissileTargetHint(ent, muzzle, vforward);
 
-	gentity_t	*missile = CreateMissile( muzzle, forward, vel, 10000, ent );
+	gentity_t	*missile = CreateMissile( muzzle, vforward, vel, 10000, ent );
 
 	missile->classname = "emplaced_proj";
 	missile->s.weapon = WP_EMPLACED_GUN;
@@ -3134,9 +3134,9 @@ void WP_ATSTMainFire( gentity_t *ent )
 		vel *= 1.6f;
 	}
 
-	WP_MissileTargetHint(ent, muzzle, forward);
+	WP_MissileTargetHint(ent, muzzle, vforward);
 
-	gentity_t	*missile = CreateMissile( muzzle, forward, vel, 10000, ent );
+	gentity_t	*missile = CreateMissile( muzzle, vforward, vel, 10000, ent );
 
 	missile->classname = "atst_main_proj";
 	missile->s.weapon = WP_ATST_MAIN;
@@ -3166,7 +3166,7 @@ void WP_ATSTSideAltFire( gentity_t *ent )
 		vel = ATST_SIDE_ALT_VELOCITY;
 	}
 
-	gentity_t *missile = CreateMissile( muzzle, forward, vel, 10000, ent, qtrue );
+	gentity_t *missile = CreateMissile( muzzle, vforward, vel, 10000, ent, qtrue );
 
 	missile->classname = "atst_rocket";
 	missile->s.weapon = WP_ATST_SIDE;
@@ -3190,7 +3190,7 @@ void WP_ATSTSideAltFire( gentity_t *ent )
 		}
 	}
 
-	VectorCopy( forward, missile->movedir );
+	VectorCopy( vforward, missile->movedir );
 
 	// Make it easier to hit things
 	VectorSet( missile->maxs, ATST_SIDE_ALT_ROCKET_SIZE, ATST_SIDE_ALT_ROCKET_SIZE, ATST_SIDE_ALT_ROCKET_SIZE );
@@ -3217,7 +3217,7 @@ void WP_ATSTSideFire( gentity_t *ent )
 {
 	int	damage	= ATST_SIDE_MAIN_DAMAGE;
 
-	gentity_t *missile = CreateMissile( muzzle, forward, ATST_SIDE_MAIN_VELOCITY, 10000, ent, qfalse );
+	gentity_t *missile = CreateMissile( muzzle, vforward, ATST_SIDE_MAIN_VELOCITY, 10000, ent, qfalse );
 
 	missile->classname = "atst_side_proj";
 	missile->s.weapon = WP_ATST_SIDE;
@@ -3269,7 +3269,7 @@ void WP_FireStunBaton( gentity_t *ent, qboolean alt_fire )
 	VectorCopy( muzzle, start );
 	WP_TraceSetStart( ent, start, vec3_origin, vec3_origin );
 
-	VectorMA( start, STUN_BATON_RANGE, forward, end );
+	VectorMA( start, STUN_BATON_RANGE, vforward, end );
 
 	VectorSet( maxs, 5, 5, 5 );
 	VectorScale( maxs, -1, mins );
@@ -3291,11 +3291,11 @@ void WP_FireStunBaton( gentity_t *ent, qboolean alt_fire )
 //		G_Sound( tr_ent, G_SoundIndex( va("sound/weapons/melee/punch%d", Q_irand(1, 4)) ) );
 		tr_ent->client->ps.powerups[PW_SHOCKED] = level.time + 1500;
 
-		G_Damage( tr_ent, ent, ent, forward, tr.endpos, STUN_BATON_DAMAGE, DAMAGE_NO_KNOCKBACK, MOD_MELEE );
+		G_Damage( tr_ent, ent, ent, vforward, tr.endpos, STUN_BATON_DAMAGE, DAMAGE_NO_KNOCKBACK, MOD_MELEE );
 	}
 	else if ( tr_ent->svFlags & SVF_GLASS_BRUSH || ( tr_ent->svFlags & SVF_BBRUSH && tr_ent->material == 12 )) // material grate...we are breaking a grate!
 	{
-		G_Damage( tr_ent, ent, ent, forward, tr.endpos, 999, DAMAGE_NO_KNOCKBACK, MOD_MELEE ); // smash that puppy
+		G_Damage( tr_ent, ent, ent, vforward, tr.endpos, 999, DAMAGE_NO_KNOCKBACK, MOD_MELEE ); // smash that puppy
 	}
 }
 
@@ -3310,7 +3310,7 @@ void WP_Melee( gentity_t *ent )
 	int			damage = ent->s.number ? (g_spskill->integer*2)+1 : 3;
 	float		range = ent->s.number ? 64 : 32;
 
-	VectorMA( muzzle, range, forward, end );
+	VectorMA( muzzle, range, vforward, end );
 
 	VectorSet( maxs, 6, 6, 6 );
 	VectorScale( maxs, -1, mins );
@@ -3339,7 +3339,7 @@ void WP_Melee( gentity_t *ent )
 	if ( tr_ent && tr_ent->takedamage )
 	{
 		G_Sound( tr_ent, G_SoundIndex( va("sound/weapons/melee/punch%d", Q_irand(1, 4)) ) );
-		G_Damage( tr_ent, ent, ent, forward, tr.endpos, damage, DAMAGE_NO_KNOCKBACK, MOD_MELEE );
+		G_Damage( tr_ent, ent, ent, vforward, tr.endpos, damage, DAMAGE_NO_KNOCKBACK, MOD_MELEE );
 	}
 }
 
@@ -3511,7 +3511,7 @@ qboolean LogAccuracyHit( gentity_t *target, gentity_t *attacker ) {
 }
 
 //---------------------------------------------------------
-void CalcMuzzlePoint( gentity_t *const ent, vec3_t forward, vec3_t right, vec3_t up, vec3_t muzzlePoint, float lead_in ) 
+void CalcMuzzlePoint( gentity_t *const ent, vec3_t vforward, vec3_t right, vec3_t up, vec3_t muzzlePoint, float lead_in ) 
 //---------------------------------------------------------
 {
 	vec3_t		org;
@@ -3537,7 +3537,7 @@ void CalcMuzzlePoint( gentity_t *const ent, vec3_t forward, vec3_t right, vec3_t
 		ViewHeightFix(ent);
 		muzzlePoint[2] += ent->client->ps.viewheight;//By eyes
 		muzzlePoint[2] -= 16;
-		VectorMA( muzzlePoint, 28, forward, muzzlePoint );
+		VectorMA( muzzlePoint, 28, vforward, muzzlePoint );
 		VectorMA( muzzlePoint, 6, vright, muzzlePoint );
 		break;
 
@@ -3553,9 +3553,9 @@ void CalcMuzzlePoint( gentity_t *const ent, vec3_t forward, vec3_t right, vec3_t
 		muzzlePoint[2] += ent->client->ps.viewheight;//By eyes
 		muzzlePoint[2] -= 1;
 		if ( ent->s.number == 0 )
-			VectorMA( muzzlePoint, 12, forward, muzzlePoint ); // player, don't set this any lower otherwise the projectile will impact immediately when your back is to a wall
+			VectorMA( muzzlePoint, 12, vforward, muzzlePoint ); // player, don't set this any lower otherwise the projectile will impact immediately when your back is to a wall
 		else
-			VectorMA( muzzlePoint, 2, forward, muzzlePoint ); // NPC, don't set too far forward otherwise the projectile can go through doors
+			VectorMA( muzzlePoint, 2, vforward, muzzlePoint ); // NPC, don't set too far forward otherwise the projectile can go through doors
 
 		VectorMA( muzzlePoint, 1, vright, muzzlePoint );
 		break;
@@ -3572,7 +3572,7 @@ void CalcMuzzlePoint( gentity_t *const ent, vec3_t forward, vec3_t right, vec3_t
 		{
 			muzzlePoint[2] += 16;
 		}
-		VectorMA( muzzlePoint, 8, forward, muzzlePoint );
+		VectorMA( muzzlePoint, 8, vforward, muzzlePoint );
 		VectorMA( muzzlePoint, 16, vright, muzzlePoint );
 		break;
 
@@ -3623,7 +3623,7 @@ void FireWeapon( gentity_t *ent, qboolean alt_fire )
 		if ( ent->NPC )
 		{
 			//snipers must use the angles they actually did their shot trace with
-			AngleVectors( ent->lastAngles, forward, vright, up );
+			AngleVectors( ent->lastAngles, vforward, vright, up );
 		}
 	}
 	else if ( ent->s.weapon == WP_ATST_SIDE || ent->s.weapon == WP_ATST_MAIN ) 
@@ -3682,12 +3682,12 @@ void FireWeapon( gentity_t *ent, qboolean alt_fire )
 			gi.G2API_GiveMeVectorFromMatrix( boltMatrix, NEGATIVE_Y, ent->client->renderInfo.muzzleDir );
 			ent->client->renderInfo.mPCalcTime = level.time;
 
-			AngleVectors( ent->client->ps.viewangles, forward, vright, up );
-			//CalcMuzzlePoint( ent, forward, vright, up, muzzle, 0 );
+			AngleVectors( ent->client->ps.viewangles, vforward, vright, up );
+			//CalcMuzzlePoint( ent, vforward, vright, up, muzzle, 0 );
 		}
 		else if ( !ent->enemy )
 		{//an NPC with no enemy to auto-aim at
-			VectorCopy( ent->client->renderInfo.muzzleDir, forward );
+			VectorCopy( ent->client->renderInfo.muzzleDir, vforward );
 		}
 		else
 		{//NPC, auto-aim at enemy
@@ -3696,7 +3696,7 @@ void FireWeapon( gentity_t *ent, qboolean alt_fire )
 			VectorSubtract (enemy_org1, muzzle1, delta1);
 
 			vectoangles ( delta1, angleToEnemy1 );
-			AngleVectors (angleToEnemy1, forward, vright, up);
+			AngleVectors (angleToEnemy1, vforward, vright, up);
 		}
 	} 
 	else if ( ent->s.weapon == WP_BOT_LASER && ent->enemy ) 
@@ -3710,15 +3710,15 @@ void FireWeapon( gentity_t *ent, qboolean alt_fire )
 		VectorSubtract (enemy_org1, muzzle1, delta1);
 
 		vectoangles ( delta1, angleToEnemy1 );
-		AngleVectors (angleToEnemy1, forward, vright, up);
+		AngleVectors (angleToEnemy1, vforward, vright, up);
 	}
 	else
 	{
-		AngleVectors( ent->client->ps.viewangles, forward, vright, up );
+		AngleVectors( ent->client->ps.viewangles, vforward, vright, up );
 	}
 
 	ent->alt_fire = alt_fire;
-	CalcMuzzlePoint ( ent, forward, vright, up, muzzle , 0);
+	CalcMuzzlePoint ( ent, vforward, vright, up, muzzle , 0);
 
 	// fire the specific weapon
 	switch( ent->s.weapon ) 
