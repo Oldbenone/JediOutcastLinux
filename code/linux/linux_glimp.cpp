@@ -1742,7 +1742,7 @@ static void install_grabs(void)
 
 		if (in_dgamouse->value) {
 		
-			
+#ifndef ARM			
 			sXf86dgaLib = dlopen ("libXxf86dga.so", RTLD_LAZY );
 			if (sXf86dgaLib)
 			{
@@ -1789,6 +1789,7 @@ static void install_grabs(void)
 				}
 			}
 			else
+#endif
 			{
 				Com_Printf("dlopen() failed on libXxf86dga.so\n" );
 			}

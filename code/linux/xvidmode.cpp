@@ -112,8 +112,9 @@ void X11DRV_XF86VM_Init(Display* dpy)
     LOAD_FUNCPTR(XF86VidModeSetGammaRamp)
 
 #undef LOAD_FUNCPTR
-
+#ifndef ARM
 	if (!XF86VidModeQueryExtension || !XF86VidModeQueryVersion || !XF86VidModeGetGammaRamp || !XF86VidModeGetGammaRampSize || !XF86VidModeSetGammaRamp)
+#endif
 	{
     printf("Unable to load function pointers from %s, Gamma Control disabled\n", SONAME_LIBXXF86VM);
     dlclose(xvidmode_handle);
