@@ -218,7 +218,7 @@ w = cgi_R_Font_StrLenPixels(text, cgs.media.qhFontSmall, 0.8f);
 w = cgi_R_Font_StrLenPixels(text, cgs.media.qhFontSmall, 0.8f);	
 	cgi_R_Font_DrawString(x, y, text, colorTable[CT_LTGOLD1], cgs.media.qhFontSmall, -1, 0.8f);
 	const float percent = cg_entities[0].gent->client->sess.missionStats.shotsFired? 100.0f * (float)cg_entities[0].gent->client->sess.missionStats.hits / cg_entities[0].gent->client->sess.missionStats.shotsFired : 0;
-	cgi_R_Font_DrawString(x+w, y, va("%.2f%%",percent), colorTable[CT_WHITE], cgs.media.qhFontSmall, -1, 0.8f);
+	cgi_R_Font_DrawString(x+w, y, va("%.2f%%",(double)percent), colorTable[CT_WHITE], cgs.media.qhFontSmall, -1, 0.8f);
 
 	if ( cg_entities[0].gent->client->sess.missionStats.weaponUsed[WP_SABER] <= 0 )
 	{

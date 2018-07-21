@@ -1995,7 +1995,7 @@ void CG_MatrixEffect ( centity_t *cent )
 		{
 			timescale = 0.01f;
 		}
-		cgi_Cvar_Set( "timescale", va("%4.2f",timescale) );
+		cgi_Cvar_Set( "timescale", va("%4.2f",(double)timescale) );
 
 		//pitch
 		//dip - FIXME: use pitchOffet?

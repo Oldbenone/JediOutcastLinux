@@ -1837,7 +1837,7 @@ evasionType_t Jedi_SaberBlockGo( gentity_t *self, usercmd_t *cmd, vec3_t pHitloc
 	// Figure out what quadrant the block was in.
 	if ( d_JediAI->integer )
 	{
-		gi.Printf( "(%d) evading attack from height %4.2f, zdiff: %4.2f, rightdot: %4.2f\n", level.time, hitloc[2]-self->absmin[2],zdiff,rightdot);
+		gi.Printf( "(%d) evading attack from height %4.2f, zdiff: %4.2f, rightdot: %4.2f\n", level.time, (double)(hitloc[2]-self->absmin[2]),(double)zdiff,(double)rightdot);
 	}
 
 	//UL = > -1//-6
@@ -2427,7 +2427,7 @@ static qboolean Jedi_SaberBlock( void )
 	{//FIXME: sometimes he reacts when you're too far away to actually hit him
 		if ( d_JediAI->integer )
 		{
-			gi.Printf( S_COLOR_RED"enemy saber dist: %4.2f\n", dist );
+			gi.Printf( S_COLOR_RED"enemy saber dist: %4.2f\n", (double)dist );
 		}
 		/*
 		if ( dist < 300 //close
@@ -2445,7 +2445,7 @@ static qboolean Jedi_SaberBlock( void )
 	}
 	if ( d_JediAI->integer )
 	{
-		gi.Printf( S_COLOR_GREEN"enemy saber dist: %4.2f\n", dist );
+		gi.Printf( S_COLOR_GREEN"enemy saber dist: %4.2f\n", (double)dist );
 	}
 	
 	VectorSubtract( saberPoint, NPC->enemy->client->renderInfo.muzzlePoint, pointDir );
@@ -4512,7 +4512,7 @@ void NPC_Jedi_Pain( gentity_t *self, gentity_t *inflictor, gentity_t *other, vec
 			float rightdot = DotProduct(right, diff);
 			float zdiff = point[2] - self->client->renderInfo.eyePoint[2];
 		
-			gi.Printf( "(%d) saber hit at height %4.2f, zdiff: %4.2f, rightdot: %4.2f\n", level.time, point[2]-self->absmin[2],zdiff,rightdot);
+			gi.Printf( "(%d) saber hit at height %4.2f, zdiff: %4.2f, rightdot: %4.2f\n", level.time, (double)(point[2]-self->absmin[2]),(double)zdiff,(double)rightdot);
 		}
 	}
 	else
