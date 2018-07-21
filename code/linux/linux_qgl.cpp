@@ -10,6 +10,7 @@
 */
 #include <float.h>
 #include "../renderer/tr_local.h"
+
 #ifdef HAVE_GLES
 void QGL_Shutdown( void )
 {
@@ -43,13 +44,13 @@ void QGL_EnableLogging( qboolean enable );
 //void (*qfxMesaSwapBuffers)(void);
 
 //GLX Functions
+#ifndef DIRECT
 XVisualInfo * (*qglXChooseVisual)( Display *dpy, int screen, int *attribList );
 GLXContext (*qglXCreateContext)( Display *dpy, XVisualInfo *vis, GLXContext shareList, Bool direct );
 void (*qglXDestroyContext)( Display *dpy, GLXContext ctx );
 Bool (*qglXMakeCurrent)( Display *dpy, GLXDrawable drawable, GLXContext ctx);
 void (*qglXCopyContext)( Display *dpy, GLXContext src, GLXContext dst, GLuint mask );
 void (*qglXSwapBuffers)( Display *dpy, GLXDrawable drawable );
-
 void ( APIENTRY * qglAccum )(GLenum op, GLfloat value);
 void ( APIENTRY * qglAlphaFunc )(GLenum func, GLclampf ref);
 GLboolean ( APIENTRY * qglAreTexturesResident )(GLsizei n, const GLuint *textures, GLboolean *residences);
@@ -386,6 +387,7 @@ void ( APIENTRY * qglVertex4s )(GLshort x, GLshort y, GLshort z, GLshort w);
 void ( APIENTRY * qglVertex4sv )(const GLshort *v);
 void ( APIENTRY * qglVertexPointer )(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
 void ( APIENTRY * qglViewport )(GLint x, GLint y, GLsizei width, GLsizei height);
+#endif //DIRECT
 #endif //HAVE_GLES
 
 void ( APIENTRY * qglMultiTexCoord2fARB )( GLenum texture, GLfloat s, GLfloat t );
@@ -402,7 +404,7 @@ void ( APIENTRY * qglColorTableEXT)( int, int, int, int, int, const void * );
 void ( APIENTRY * qgl3DfxSetPaletteEXT)( GLuint * );
 void ( APIENTRY * qglSelectTextureSGIS)( GLenum );
 void ( APIENTRY * qglMTexCoord2fSGIS)( GLenum, GLfloat, GLfloat );
-
+#ifndef DIRECT
 static void ( APIENTRY * dllAccum )(GLenum op, GLfloat value);
 static void ( APIENTRY * dllAlphaFunc )(GLenum func, GLclampf ref);
 GLboolean ( APIENTRY * dllAreTexturesResident )(GLsizei n, const GLuint *textures, GLboolean *residences);
@@ -2794,6 +2796,7 @@ static void APIENTRY logViewport(GLint x, GLint y, GLsizei width, GLsizei height
 	fprintf( glw_state.log_fp, "glViewport( %d, %d, %d, %d )\n", x, y, width, height );
 	dllViewport( x, y, width, height );
 }
+#endif //DIRECT
 
 /*
 ** QGL_Shutdown
@@ -2804,7 +2807,7 @@ static void APIENTRY logViewport(GLint x, GLint y, GLsizei width, GLsizei height
 void QGL_Shutdown( void )
 {
 	ri.Printf( PRINT_ALL, "...shutting down QGL\n" );
-
+#ifndef DIRECT
 	if ( glw_state.OpenGLLib )
 	{
 		dlclose ( glw_state.OpenGLLib );
@@ -3162,15 +3165,19 @@ void QGL_Shutdown( void )
 	qglXMakeCurrent              = NULL;
 	qglXCopyContext              = NULL;
 	qglXSwapBuffers              = NULL;
+#endif
 }
-
 #define GPA( a ) dlsym( glw_state.OpenGLLib, a )
 
 void *qwglGetProcAddress(char *symbol)
 {
+#ifdef DIRECT
+	return glXGetProcAddress(symbol);
+#else
 	if (glw_state.OpenGLLib)
 		return GPA ( symbol );
 	return NULL;
+#endif
 }
 
 /*
@@ -3184,6 +3191,7 @@ void *qwglGetProcAddress(char *symbol)
 */
 qboolean QGL_Init( const char *dllname )
 {
+#ifndef DIRECT
 	if ( ( glw_state.OpenGLLib = dlopen( dllname, RTLD_LAZY ) ) == 0 )
 	{
 		char	fn[1024];
@@ -3558,7 +3566,7 @@ qboolean QGL_Init( const char *dllname )
 	qglXMakeCurrent              =  (int (*)(Display*, GLXDrawable, GLXContext)) GPA("glXMakeCurrent");
 	qglXCopyContext              =  (void (*)(Display*, GLXContext, GLXContext, GLuint)) GPA("glXCopyContext");
 	qglXSwapBuffers              =  (void (*)(Display*, GLXDrawable)) GPA("glXSwapBuffers");
-
+#endif
 	qglLockArraysEXT = 0;
 	qglUnlockArraysEXT = 0;
 	qglPointParameterfEXT = 0;
@@ -3579,6 +3587,7 @@ qboolean QGL_Init( const char *dllname )
 
 void QGL_EnableLogging( qboolean enable )
 {
+#ifndef DIRECT
 	static qboolean isEnabled;
 
 	// return if we're already active
@@ -4299,6 +4308,7 @@ void QGL_EnableLogging( qboolean enable )
 		qglVertexPointer             = 	dllVertexPointer             ;
 		qglViewport                  = 	dllViewport                  ;
 	}
+#endif //DIRECT
 }
 #endif //HAVE_GLES
 

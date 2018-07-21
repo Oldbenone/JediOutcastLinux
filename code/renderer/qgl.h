@@ -5,6 +5,11 @@
 #ifndef __QGL_H__
 #define __QGL_H__
 
+#ifdef ARM
+// not strictly required
+#define DIRECT
+#endif
+
 #if defined( __LINT__ )
 
 #include <GL/gl.h>
@@ -161,7 +166,7 @@ extern void ( APIENTRY * qglPNTrianglesiATI )( GLenum pname, GLint param );
 //===========================================================================
 
 // non-windows systems will just redefine qgl* to gl*
-#if (!defined( _WIN32 ) && !defined( __linux__ )) || defined(HAVE_GLES)
+#if (!defined( _WIN32 ) && !defined( __linux__ )) || defined(HAVE_GLES) || defined(DIRECT)
 
 #include "qgl_linked.h"
 

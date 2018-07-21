@@ -382,3 +382,12 @@
 //#define GL_BACK_RIGHT 0x403
 #define GL_CLAMP     GL_CLAMP_TO_EDGE
 #endif
+
+#if defined(__linux__) && !defined(HAVE_GLES)
+#define qglXChooseVisual glXChooseVisual
+#define qglXCreateContext glXCreateContext
+#define qglXDestroyContext glXDestroyContext
+#define qglXMakeCurrent glXMakeCurrent
+#define qglXCopyContext glXCopyContext
+#define qglXSwapBuffers glXSwapBuffers
+#endif
