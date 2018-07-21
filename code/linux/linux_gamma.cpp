@@ -23,7 +23,9 @@ static x11drv_gamma_ramp s_oldHardwareGamma;
 
 void WG_CheckHardwareGamma( void )
 {
-
+#ifdef PANDORA
+	glConfig.deviceSupportsGamma = qtrue;
+#else
 	glConfig.deviceSupportsGamma = qfalse;
 
 	if ( !r_ignorehwgamma->integer )
@@ -62,6 +64,7 @@ void WG_CheckHardwareGamma( void )
 			}
 		}
 	}
+#endif
 }
 
 /*
@@ -80,6 +83,20 @@ void GLimp_SetGamma( unsigned char red[256], unsigned char green[256], unsigned 
 	}
 
 //mapGammaMax();
+
+#ifdef PANDORA
+    double new_gamma;
+    char tmp_gamma[51];
+    if(red[128])
+        new_gamma = log(0.5)/log((( ( ( unsigned short ) red[128] ) << 8 ) | red[128])/65535.0);
+    else
+        new_gamma = (double)0.0;
+    if(new_gamma!=(double)0.0)
+        snprintf(tmp_gamma, 50,"sudo /usr/pandora/scripts/op_gamma.sh %.2f", new_gamma);
+    else
+        snprintf(tmp_gamma, 50,"sudo /usr/pandora/scripts/op_gamma.sh 0");
+    system(tmp_gamma);
+#else
 
 	for ( i = 0; i < 256; i++ ) {
 		table.red[i] = ( ( ( unsigned short ) red[i] ) << 8 ) | red[i];
@@ -109,6 +126,7 @@ void GLimp_SetGamma( unsigned char red[256], unsigned char green[256], unsigned 
 	if ( !ret ) {
 		Com_Printf( "SetDeviceGammaRamp failed.\n" );
 	}
+#endif
 }
 
 /*
@@ -116,9 +134,13 @@ void GLimp_SetGamma( unsigned char red[256], unsigned char green[256], unsigned 
 */
 void WG_RestoreGamma( void )
 {
+#ifdef PANDORA
+	system("sudo /usr/pandora/scripts/op_gamma.sh 0");
+#else
 	if ( glConfig.deviceSupportsGamma )
 	{
 		X11DRV_XF86VM_SetGammaRamp(&s_oldHardwareGamma );
 	}
+#endif
 }
 

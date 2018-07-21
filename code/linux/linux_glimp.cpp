@@ -479,6 +479,7 @@ int GLW_SetMode( const char *drivername, int mode, qboolean fullscreen )
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	
+	WG_CheckHardwareGamma();
 
 #else
 	int attrib[] = {
@@ -1070,8 +1071,8 @@ static void GLW_InitExtensions( void )
 	qglPointParameterfEXT = NULL;
 	qglPointParameterfvEXT = NULL;
 #ifdef HAVE_GLES
-	qglPointParameterfEXT = &glPointParameterf;
-	qglPointParameterfvEXT = &glPointParameterfv;
+	qglPointParameterfEXT = ( void ( APIENTRY * )( GLenum, GLfloat) ) &glPointParameterf;
+	qglPointParameterfvEXT = ( void ( APIENTRY * )( GLenum, GLfloat *) ) &glPointParameterfv;
 	ri.Printf( PRINT_ALL, "...using GL_EXT_point_parameters\n" );
 #else
 	if ( strstr( glConfig.extensions_string, "GL_EXT_point_parameters" ) )
@@ -1450,6 +1451,7 @@ void* GLimp_RenderThreadWrapper( void *stub ) {
 	// unbind the context before we die
 	qglXMakeCurrent(dpy, None, NULL);
 #endif
+	return NULL;
 }
 /*
 =======================
