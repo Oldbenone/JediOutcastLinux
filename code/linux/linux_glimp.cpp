@@ -2070,8 +2070,9 @@ void IN_Frame (void)
 
 	// post events to the system que
 	IN_MouseMove();
-
+#ifdef JOYSTICK
 	IN_JoyMove();
+#endif
 }
 
 void IN_Activate(void)
